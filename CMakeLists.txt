@@ -22,13 +22,16 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #                           DEPENDENCIES                            #
 #///////////////////////////////////////////////////////////////////#
 
-if(NVML_RETRIEVE_HEADER_ONLINE)
-  file(DOWNLOAD "https://raw.githubusercontent.com/NVIDIA/nvidia-settings/master/src/nvml.h" ${PROJECT_BINARY_DIR}/include/nvml.h)
-endif()
-
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-find_package(NVML REQUIRED)
+find_package(NVML)
+if(NOT NVML_FOUND)
+  # If the library can be found but not the header, download the header from nvidia repository and retry
+  if(NOT NVML_LIBRARIES STREQUAL "NVML_LIBRARIES-NOTFOUND" AND NVML_INCLUDE_DIRS STREQUAL "NVML_INCLUDE_DIRS-NOTFOUND")
+    file(DOWNLOAD "https://raw.githubusercontent.com/NVIDIA/nvidia-settings/master/src/nvml.h" ${PROJECT_BINARY_DIR}/include/nvml.h)
+  endif()
+  find_package(NVML REQUIRED)
+endif()
 
 add_library(nvml INTERFACE IMPORTED)
 set_property(TARGET nvml PROPERTY
